@@ -12,7 +12,7 @@
         <div class="tab-item-title">商家</div>
       </router-link>
     </div>
-    <router-view></router-view>
+    <router-view :seller="seller"></router-view>
   </div>
 </template>
 
@@ -24,7 +24,6 @@ export default {
   data: function () {
     return {
       seller: {},
-      goods: [],
       ratings: []
     }
   },
@@ -40,7 +39,6 @@ export default {
     handleGetSellInfoSucc (res) {
       const data = res.data
       this.seller = data.seller
-      this.goods = data.goods
       this.ratings = data.ratings
     }
   },
