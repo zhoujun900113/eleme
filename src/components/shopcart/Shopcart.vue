@@ -1,35 +1,68 @@
 <template>
+  <div>
     <div class="shopcart">
-        <div class="content">
-            <div class="content-left">
-                <div class="logo-wrapper">
-                    <div class="logo" :class="{'highlight':totalCount>0}">
-                        <i class="icon-shopping_cart" :class="{'highlight':totalCount>0}"></i>
-                    </div>
-                    <div class="num" v-show="totalCount">{{totalCount}}</div>
-                </div>
-                <div class="price border-right" :class="{'highlight':totalPrice>0}">￥{{totalPrice}}元</div>
-                <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
+      <div class="content" @click="toggleList">
+        <div class="content-left">
+          <div class="logo-wrapper">
+            <div class="logo" :class="{'highlight':totalCount>0}">
+              <i class="icon-shopping_cart" :class="{'highlight':totalCount>0}"></i>
             </div>
-            <div class="content-right">
-                <div class="pay" :class="payClass">
-                    {{payDesc}}
-                </div>
-            </div>
+            <div class="num" v-show="totalCount">{{totalCount}}</div>
+          </div>
+          <div class="price border-right" :class="{'highlight':totalPrice>0}">￥{{totalPrice}}元</div>
+          <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
         </div>
-        <div class="ball-container">
-            <transition-group name="drop"
-              v-on:before-enter="beforeEnter"
-              v-on:enter="enter"
-              v-on:after-enter="afterEnter">
-                <div v-for="(ball,index) in balls" :key="index+0" v-show="ball.show" class="ball">
-                  <div class="inner inner-hook"></div>
-                </div>
-            </transition-group>
+        <div class="content-right" @click.stop.prevent="pay">
+          <div class="pay" :class="payClass">
+            {{payDesc}}
+          </div>
         </div>
-    </div>
+      </div>
+      <div class="ball-container">
+        <transition-group name="drop"
+          v-on:before-enter="beforeEnter"
+          v-on:enter="enter"
+          v-on:after-enter="afterEnter">
+          <div v-for="(ball,index) in balls" :key="index+0" v-show="ball.show" class="ball">
+            <div class="inner inner-hook"></div>
+          </div>
+        </transition-group>
+      </div>
+      <transition name="fold"
+        v-on:before-enter="foldBeforeEnter"
+        v-on:enter="foldEnter"
+        v-on:before-leave="foldBeforeLeave"
+        v-on:leave="foldLeave">
+        <div class="shopcart-list" v-show="listShow">
+          <div class="list-header">
+            <h1 class="title">购物车</h1>
+            <span class="empty" @click="empty">清空</span>
+          </div>
+          <div class="list-content" ref="listContent">
+            <ul>
+              <li class="food border-bottom" v-for="(food,index) in selectFoods" :key="index">
+                <span class="name">{{food.name}}</span>
+                <div class="price">
+                  <span>￥{{food.price}}</span>
+                </div>
+                <div class="cartcontrol-wrapper">
+                  <cart-control :food="food"></cart-control>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </transition>
+      </div>
+      <transition name="fade">
+        <div class="list-mask" @click="hideList" v-show="listShow">
+        </div>
+      </transition>
+  </div>
 </template>
 <script>
+import BScroll from 'better-scroll'
+import CartControl from '@/components/cartcontrol/cartcontrol'
 export default {
   name: 'Shopcart',
   data () {
@@ -45,7 +78,8 @@ export default {
       }, {
         show: false
       }],
-      dropBalls: []
+      dropBalls: [],
+      fold: true
     }
   },
   methods: {
@@ -60,6 +94,20 @@ export default {
         }
       }
     },
+    pay () {
+      if (this.totalPrice < this.minPrice) {
+        return
+      }
+      window.alert(`支付${this.totalPrice}元`)
+    },
+    hideList () {
+      this.fold = true
+    },
+    empty () {
+      this.selectFoods.forEach((food) => {
+        food.count = 0
+      })
+    },
     beforeEnter (el) {
       let count = this.balls.length
       while (count--) {
@@ -68,26 +116,49 @@ export default {
           let rect = ball.el.getBoundingClientRect()
           let x = rect.left - 32
           let y = -(window.innerHeight - rect.top - 22)
-          // class="ball" is y direction transform
+          // class="ball" y direction transform
           el.style.display = ''
           el.style.webkitTransform = `translate3d(0,${y}px, 0)`
           el.style.transform = `translate3d(0,${y}px, 0)`
-          // class="inner" is x direction transform
+          // class="inner" x direction transform
           let inner = el.getElementsByClassName('inner-hook')[0]
           inner.style.webkitTransform = `translate3d(${x}px,0, 0)`
           inner.style.transform = `translate3d(${x}px,0, 0)`
         }
       }
     },
+    foldBeforeEnter (el) {
+      el.style.webkitTransform = `translate3d(0, 0, 0)`
+      el.style.transform = `translate3d(0, 0, 0)`
+    },
+    foldBeforeLeave (el) {
+      el.style.webkitTransform = `translate3d(0, -100%, 0)`
+      el.style.transform = `translate3d(0, -100%, 0)`
+    },
     enter (el) {
       /* eslint-disable no-unused-vars */
       let rf = el.offsetHeight
       this.$nextTick(() => {
+        // style reset
         el.style.webkitTransform = 'translate3d(0, 0, 0)'
         el.style.transform = 'translate3d(0, 0, 0)'
         let inner = el.getElementsByClassName('inner-hook')[0]
         inner.style.webkitTransform = 'translate3d(0, 0, 0)'
         inner.style.transform = 'translate3d(0, 0, 0)'
+      })
+    },
+    foldEnter (el) {
+      this.$nextTick(() => {
+        // style reset
+        el.style.webkitTransform = 'translate3d(0, -100%, 0)'
+        el.style.transform = 'translate3d(0, -100%, 0)'
+      })
+    },
+    foldLeave (el) {
+      this.$nextTick(() => {
+        // style reset
+        el.style.webkitTransform = 'translate3d(0, 0, 0)'
+        el.style.transform = 'translate3d(0, 0, 0)'
       })
     },
     afterEnter (el) {
@@ -97,7 +168,17 @@ export default {
         ball.show = false
         el.style.display = 'none'
       }
+    },
+    toggleList () {
+      if (!this.totalCount) {
+        this.fold = true
+        return
+      }
+      this.fold = !this.fold
     }
+  },
+  components: {
+    CartControl
   },
   props: {
     selectFoods: {
@@ -146,7 +227,49 @@ export default {
       } else {
         return 'enough'
       }
-    }
+    },
+    listShow: {
+      get: function () {
+        return !this.fold
+      },
+      set: function () {
+        if (!this.totalCount) {
+          this.fold = true
+          return false
+        }
+        let show = !this.fold
+        if (show) {
+          this.$nextTick(() => {
+            if (!this.scroll) {
+              this.scroll = new BScroll(this.$refs.listContent, {
+                click: true
+              })
+            } else {
+              this.scroll.refresh()
+            }
+          })
+        }
+        return show
+      }
+    } /*
+    listShow () {
+      if (!this.totalCount) {
+        this.fold = true
+      }
+      let show = !this.fold
+      if (show) {
+        this.$nextTick(() => {
+          if (!this.scroll) {
+            this.scroll = new BScroll(this.$refs.listContent, {
+              click: true
+            })
+          } else {
+            this.scroll.refresh()
+          }
+        })
+      }
+      return show
+    } */
   }
 }
 </script>
@@ -240,7 +363,7 @@ export default {
             color: #ffffff
     .ball-container
       .drop-enter-active, .drop-leave-active
-        transition: all 0.4s cubic-bezier(.49, -0.29, 0.75, 0.41)
+        transition: all 0.6s cubic-bezier(.49, -0.29, 0.75, 0.41)
       .ball
         position: fixed
         left: .64rem
@@ -251,5 +374,67 @@ export default {
           height: .32rem
           background: rgb(0,160,220)
           border-radius: 50%
-          transition: all 0.4s linear
+          transition: all 0.6s linear
+    .shopcart-list
+      position: absolute
+      left: 0
+      top: 0
+      z-index: -1
+      width: 100%
+      &.fold-enter-active, &.fold-leave-active
+        transition: all 0.5s
+      .list-header
+        height: .8rem
+        line-height: .8rem
+        padding: 0 .36rem
+        overflow: hidden
+        background: #f3f5f7
+        .title
+          float: left
+          font-size: .28rem
+          color: rgb(7,17,27)
+        .empty
+          float: right
+          font-size: .24rem
+          color: rgb(0,160,220)
+      .list-content
+        padding: 0 0.36rem
+        max-height: 4.34rem
+        overflow: hidden
+        background: #ffffff
+      .food
+        position: relative
+        padding: 0.24rem 0
+        box-sizing: border-box
+        .name
+          line-height: .48rem
+          font-size: .28rem
+          color: rgb(7,17,27)
+        .price
+          position: absolute
+          right: 1.8rem
+          bottom: .24rem
+          line-height: .48rem
+          font-weight: 700
+          font-size: .28rem
+          color: rgb(240,20,20)
+        .cartcontrol-wrapper
+          position: absolute
+          right: 0
+          bottom: .12rem
+  .list-mask
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    z-index: 9
+    opacity: 1
+    background: rgba(7,17,27,0.6)
+    backdrop-filter: blur(0.2rem)
+    &.fade-enter-active, &.fade-leave-active
+      transition: all 0.5s
+    &.fade-enter, &.fade-leave-to
+      opacity: 0
+      background: rgba(7,17,27,0)
 </style>

@@ -39,7 +39,7 @@ export default {
     font-size: 0
     .v-enter, .v-leave-to
       opacity: 0
-      transform: translate3D(.48rem, 0, 0) rotate(180deg)
+      transform: translate3d(.48rem, 0, 0) rotate(180deg)
     .v-enter-active, .v-leave-active
       transition:all 0.4s linear
     .cart-decrease, .cart-add
