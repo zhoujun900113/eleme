@@ -1,4 +1,5 @@
 <template>
+  <div>
     <div class="goods">
       <div class="menu-wrapper" ref="menuwrapper">
         <ul>
@@ -15,7 +16,7 @@
           <li v-for="(item,index) in goods" :key="index" class="food-list food-list-hook">
             <h1 class="title">{{item.name}}</h1>
             <ul>
-              <li v-for="(food,index) in item.foods" :key="index" class="food-item border-bottom">
+              <li @click="clickFood(food,$event)" v-for="(food,index) in item.foods" :key="index" class="food-item border-bottom">
                 <div class="icon">
                   <img :src="food.icon">
                 </div>
@@ -41,12 +42,15 @@
       </div>
       <shopcart ref="shopcart" :selectFoods="selectFoods" :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice"></shopcart>
     </div>
+    <food :food="selectFood" ref="food" @cartAdd="cartAdd"></food>
+  </div>
 </template>
 <script>
 import BScroll from 'better-scroll'
 import axios from 'axios'
 import Shopcart from '@/components/shopcart/Shopcart'
 import CartControl from '@/components/cartcontrol/cartcontrol'
+import Food from '@/components/food/food'
 export default {
   name: 'Goods',
   props: {
@@ -58,12 +62,14 @@ export default {
     return {
       goods: [],
       listHeight: [],
-      scrollY: 0
+      scrollY: 0,
+      selectFood: {}
     }
   },
   components: {
     Shopcart,
-    CartControl
+    CartControl,
+    Food
   },
   computed: {
     currentIndex () {
@@ -89,6 +95,10 @@ export default {
     }
   },
   methods: {
+    clickFood (food, event) {
+      this.selectFood = food
+      this.$refs.food.show()
+    },
     _initScroll () {
       this.menuScroll = new BScroll(this.$refs.menuwrapper, {
         click: true
