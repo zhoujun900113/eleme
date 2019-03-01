@@ -12,18 +12,26 @@
         <div class="tab-item-title">商家</div>
       </router-link>
     </div>
-    <router-view :seller="seller" :ratings="ratings"></router-view>
+    <keep-alive>
+      <router-view :seller="seller" :ratings="ratings"></router-view>
+    </keep-alive>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import {urlParse} from 'common/js/util'
 import Header from '@/components/header/Header'
 export default {
   name: 'App',
   data: function () {
     return {
-      seller: {},
+      seller: {
+        id: (() => {
+          let queryParam = urlParse()
+          return queryParam.id
+        })()
+      },
       ratings: []
     }
   },
@@ -38,7 +46,7 @@ export default {
     },
     handleGetSellInfoSucc (res) {
       const data = res.data
-      this.seller = data.seller
+      this.seller = Object.assign({}, data.seller, {'id': this.seller.id})
       this.ratings = data.ratings
     }
   },

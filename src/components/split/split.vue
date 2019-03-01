@@ -1,5 +1,5 @@
 <template>
-  <div class="split border-top border-bottom"></div>
+  <div class="split border-topbottom"></div>
 </template>
 <script>
 export default {
